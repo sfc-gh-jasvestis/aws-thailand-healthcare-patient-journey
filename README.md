@@ -8,7 +8,6 @@ Thailand welcomes 3.5 million medical tourists annually generating ฿140B — b
 
 ```mermaid
 flowchart LR
-    SP --> RAW[RAW Tables]
     RAW --> DT[Dynamic Tables]
     DT --> ML[ML Functions]
     DT --> SEARCH[Cortex Search]
