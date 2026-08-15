@@ -1,0 +1,122 @@
+{
+  "title": "International Patient Journey Analytics",
+  "duration": "4 minutes",
+  "thesis": "Snowflake unifies international patient data across 15 hospitals, generates AI-powered treatment package recommendations, and automates personalized outreach \u2014 replacing fragmented systems with unified patient intelligence",
+  "tabs": [
+    {
+      "id": "executive-cockpit",
+      "persona": {
+        "name": "Dr. Sirichai Kanjanawasee",
+        "role": "Chief Medical Tourism Officer",
+        "avatar": "\ud83d\udc68\u200d\u2695\ufe0f"
+      },
+      "talking_points": [
+        "Medical tourism revenue: \u0e3f4.2B this year across 15 hospitals. Average revenue per patient: \u0e3f320K.",
+        "Middle East patients: highest RPP at \u0e3f780K. Myanmar/Cambodia: volume leaders at 35% of patients.",
+        "Conversion rate declining in aesthetic segment: 18% (down from 28%) \u2014 competitor pressure from Malaysia."
+      ],
+      "show": [
+        "Point at revenue by source market treemap",
+        "Highlight RPP comparison chart",
+        "Note conversion decline alert"
+      ],
+      "call_out": "\u0e3f4.2B revenue \u2014 aesthetic conversion declining (competitor pressure)",
+      "transition": {
+        "next_tab": "package-recommendations",
+        "line": "Let's see what AI recommends to improve conversion."
+      }
+    },
+    {
+      "id": "package-recommendations",
+      "persona": {
+        "name": "Ornuma Setthabutr",
+        "role": "Patient Experience Director",
+        "avatar": "\ud83d\udc69\u200d\ud83d\udcbc"
+      },
+      "talking_points": [
+        "Cortex Complete generates personalized package recommendations for each patient inquiry.",
+        "Myanmar cardiac patient: recommend Bumrungrad Premium Cardiac Package (\u0e3f890K) based on age, condition, insurance.",
+        "AI considers source country preferences, budget signals, and historical conversion patterns."
+      ],
+      "show": [
+        "Show recommendation engine interface",
+        "Click a patient for detailed recommendation",
+        "Show conversion rate by recommendation type"
+      ],
+      "call_out": "AI-personalized packages \u2014 40% higher conversion than generic offerings",
+      "transition": {
+        "next_tab": "demand-forecasting",
+        "line": "How do we forecast demand for capacity planning?"
+      }
+    },
+    {
+      "id": "demand-forecasting",
+      "persona": {
+        "name": "Ornuma Setthabutr",
+        "role": "Patient Experience Director",
+        "avatar": "\ud83d\udc69\u200d\ud83d\udcbc"
+      },
+      "talking_points": [
+        "ML.FORECAST predicts patient volume by source country 90 days ahead.",
+        "Myanmar demand up 25% next quarter (political instability driving outbound medical).",
+        "Middle East demand peaks during Ramadan/Eid break \u2014 schedule capacity now."
+      ],
+      "show": [
+        "Show demand forecast by top 5 source countries",
+        "Click Myanmar for drivers",
+        "Show capacity planning calendar"
+      ],
+      "call_out": "90-day demand forecasts enable proactive capacity planning",
+      "transition": {
+        "next_tab": "ask-ai",
+        "line": "Now let the CMTO ask the system directly."
+      }
+    },
+    {
+      "id": "ask-ai",
+      "persona": {
+        "name": "Dr. Sirichai Kanjanawasee",
+        "role": "Chief Medical Tourism Officer",
+        "avatar": "\ud83d\udc68\u200d\u2695\ufe0f"
+      },
+      "talking_points": [
+        "Dr. Sirichai asks: 'What should we do to recover aesthetic conversion rates?'",
+        "Cortex Analyst: Shows competitive pricing analysis, then advisor recommends package bundling + digital marketing.",
+        "Switch to advisor: 'Draft a patient outreach for Middle East Ramadan campaign' \u2014 generates multilingual content."
+      ],
+      "show": [
+        "Type: 'Why is aesthetic conversion declining?'",
+        "Show analysis + competitor data",
+        "Switch to advisor mode"
+      ],
+      "call_out": "Two AI modes: SQL analytics + patient strategy advisory",
+      "transition": {
+        "next_tab": "architecture",
+        "line": "Every capability \u2014 native Snowflake SQL."
+      }
+    },
+    {
+      "id": "architecture",
+      "persona": {
+        "name": "Dr. Sirichai Kanjanawasee",
+        "role": "Chief Medical Tourism Officer",
+        "avatar": "\ud83d\udc68\u200d\u2695\ufe0f"
+      },
+      "talking_points": [
+        "Seven Snowflake capabilities, six AWS services.",
+        "Personalize/Cortex Complete generates recommendations; SES/Notification sends them.",
+        "Thailand's medical tourism: 3.5M patients/year, \u0e3f140B revenue. This optimizes for 15 hospitals."
+      ],
+      "show": [
+        "Walk through architecture diagram",
+        "Toggle dual-build mode",
+        "Point at recommendation pipeline"
+      ],
+      "call_out": "From patient inquiry to personalized recommendation \u2014 one platform",
+      "transition": {
+        "next_tab": "",
+        "line": "That's Snowflake and AWS \u2014 better together for Thai medical tourism."
+      }
+    }
+  ]
+}
