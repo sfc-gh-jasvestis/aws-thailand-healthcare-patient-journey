@@ -1,6 +1,6 @@
 -- ============================================================================
 -- 09_AWS_INTEGRATION.SQL — AWS services for International Patient Journey Analytics
--- Account: 018437500440 | Region: ap-southeast-1
+-- Account: <YOUR_AWS_ACCOUNT_ID> | Region: ap-southeast-1
 -- Skip this script for Snowflake-only build
 -- ============================================================================
 USE DATABASE PATIENT_JOURNEY;
@@ -72,5 +72,5 @@ CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION aws_thailand_healthcare_patient_jo
   ENABLED = TRUE
   COMMENT = 'SNS access for International Patient Journey Analytics alerts';
 
--- SNS Topic ARN: arn:aws:sns:ap-southeast-1:018437500440:sea-demos-aws-thailand-healthcare-patient-journey
+-- SNS Topic ARN: arn:aws:sns:ap-southeast-1:<YOUR_AWS_ACCOUNT_ID>:sea-demos-aws-thailand-healthcare-patient-journey
 
