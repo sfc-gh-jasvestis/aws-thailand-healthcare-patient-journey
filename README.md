@@ -120,7 +120,7 @@ Industry research and Snowflake customer outcomes:
 - **AI-powered patient recommendations increase treatment package conversion by 25-40%** — [McKinsey Healthcare](https://www.mckinsey.com/industries/healthcare/our-insights)
 - **Bumrungrad International Hospital treated 1.1M international patients from 190 countries in 2023** — [Bumrungrad](https://www.bumrungrad.com/)
 - **Personalized healthcare communications improve patient engagement by 3-5x over generic messaging** — [Deloitte Health](https://www2.deloitte.com/us/en/pages/life-sciences-and-health-care.html)
-
+- **Sanofi** (Snowflake customer): 50% performance improvement, processing 100M patient records in 4 minutes on Snowflake -- [snowflake.com/customers/sanofi](https://www.snowflake.com/en/customers/all-customers/case-study/sanofi/)
 
 ## Key Demo Numbers
 
