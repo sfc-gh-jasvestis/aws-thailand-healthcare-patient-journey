@@ -5,112 +5,98 @@ import { executeQuery } from '@/lib/snowflake';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const SCHEMA = 'CURATED';
-
 /**
- * Every demo database shares the same CURATED table names and common columns,
- * but the primary metric column is domain specific (AVG_GENERATION_MWH,
- * AVG_FRAUD_RATE, AVG_LINE_YIELD, ...). Discover it at runtime so one route
- * works across all demos.
+ * This demo has a bespoke curated model (CURATED.HOSPITAL_PERFORMANCE), not the
+ * generic PERFORMANCE_SUMMARY / TREND_ANALYSIS pair used by most SEA demos, so
+ * it needs its own route. Keys returned match what page.tsx binds to.
  */
-async function discoverMetricColumns() {
-  const rows = await executeQuery<{ TABLE_NAME: string; COLUMN_NAME: string }>(`
-    SELECT TABLE_NAME, COLUMN_NAME
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = '${SCHEMA}'
-      AND TABLE_NAME IN ('TREND_ANALYSIS', 'PERFORMANCE_SUMMARY')
-      AND COLUMN_NAME LIKE 'AVG%'
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY TABLE_NAME ORDER BY ORDINAL_POSITION) = 1
-  `);
-
-  const found: Record<string, string> = {};
-  for (const row of rows) found[row.TABLE_NAME] = row.COLUMN_NAME;
-
-  return {
-    trend: found.TREND_ANALYSIS || 'DAILY_EVENTS',
-    perf: found.PERFORMANCE_SUMMARY || 'EVENT_COUNT',
-  };
-}
-
-function prettyMetricName(column: string): string {
-  return column.replace(/^AVG_/, '').replace(/_/g, ' ');
-}
-
 export async function GET() {
   try {
-    const metric = await discoverMetricColumns();
-
-    const [kpiRows, trendRows, regionRows, detailRows, categoryRows, entityRows] = await Promise.all([
+    const [kpiRows, trendRows, regionRows, detailRows, typeRows, entityRows] = await Promise.all([
       executeQuery<Record<string, number>>(`
-        SELECT COUNT(DISTINCT ENTITY_ID) AS TOTAL_ENTITIES,
-               SUM(EVENT_COUNT)          AS TOTAL_EVENTS,
-               ROUND(AVG(${metric.perf}), 1) AS AVG_METRIC,
-               SUM(ALERT_COUNT)          AS TOTAL_ALERTS
-        FROM ${SCHEMA}.PERFORMANCE_SUMMARY
+        SELECT COUNT(DISTINCT HOSPITAL_ID)     AS TOTAL_HOSPITALS,
+               SUM(TOTAL_ENCOUNTERS)           AS TOTAL_ENCOUNTERS,
+               SUM(ED_VISITS)                  AS TOTAL_ED_VISITS,
+               SUM(ADMISSIONS)                 AS TOTAL_ADMISSIONS,
+               ROUND(AVG(AVG_WAIT_MINS), 1)    AS AVG_WAIT_MINS,
+               ROUND(AVG(ED_AVG_WAIT_MINS), 1) AS AVG_ED_WAIT_MINS,
+               ROUND(AVG(AVG_LOS_HOURS), 1)    AS AVG_LOS_HOURS,
+               ROUND(AVG(LWBS_RATE_PCT), 2)    AS AVG_LWBS_RATE,
+               ROUND(AVG(ACUITY_HIGH_PCT), 1)  AS AVG_ACUITY_HIGH
+        FROM CURATED.HOSPITAL_PERFORMANCE
       `),
 
       executeQuery<{ PERIOD: string; VALUE: number }>(`
         SELECT TO_CHAR(METRIC_DATE, 'Mon DD') AS PERIOD,
-               ROUND(AVG(${metric.trend}), 1) AS VALUE
-        FROM ${SCHEMA}.TREND_ANALYSIS
+               ROUND(AVG(AVG_WAIT_MINS), 1)   AS VALUE
+        FROM CURATED.HOSPITAL_PERFORMANCE
         GROUP BY METRIC_DATE
         ORDER BY METRIC_DATE
       `),
 
       executeQuery<{ CATEGORY: string; COUNT: number }>(`
-        SELECT REGION AS CATEGORY, ROUND(AVG(${metric.perf}), 1) AS COUNT
-        FROM ${SCHEMA}.PERFORMANCE_SUMMARY
+        SELECT REGION AS CATEGORY, ROUND(AVG(AVG_WAIT_MINS), 1) AS COUNT
+        FROM CURATED.HOSPITAL_PERFORMANCE
         GROUP BY REGION
         ORDER BY COUNT DESC
       `),
 
       executeQuery<{ X: string; Y: number }>(`
         SELECT TO_CHAR(METRIC_DATE, 'Dy DD') AS X,
-               ROUND(AVG(${metric.trend}), 1) AS Y
-        FROM ${SCHEMA}.TREND_ANALYSIS
-        WHERE METRIC_DATE >= DATEADD('day', -7, (SELECT MAX(METRIC_DATE) FROM ${SCHEMA}.TREND_ANALYSIS))
+               ROUND(AVG(ED_AVG_WAIT_MINS), 1) AS Y
+        FROM CURATED.HOSPITAL_PERFORMANCE
+        WHERE METRIC_DATE >= DATEADD('day', -7, (SELECT MAX(METRIC_DATE) FROM CURATED.HOSPITAL_PERFORMANCE))
         GROUP BY METRIC_DATE
         ORDER BY METRIC_DATE
       `),
 
+      // Public vs private is the real insight in this dataset.
       executeQuery<{ LABEL: string; VALUE: number }>(`
-        SELECT CATEGORY AS LABEL, SUM(ALERT_COUNT) AS VALUE
-        FROM ${SCHEMA}.PERFORMANCE_SUMMARY
-        GROUP BY CATEGORY
+        SELECT HOSPITAL_TYPE AS LABEL, SUM(TOTAL_ENCOUNTERS) AS VALUE
+        FROM CURATED.HOSPITAL_PERFORMANCE
+        GROUP BY HOSPITAL_TYPE
         ORDER BY VALUE DESC
       `),
 
-      executeQuery<{ ID: string; NAME: string; REGION: string; VALUE: number; ALERTS: number }>(`
-        SELECT ENTITY_ID AS ID, ENTITY_NAME AS NAME, REGION,
-               ROUND(AVG(${metric.perf}), 1) AS VALUE,
-               SUM(ALERT_COUNT) AS ALERTS
-        FROM ${SCHEMA}.PERFORMANCE_SUMMARY
-        GROUP BY ENTITY_ID, ENTITY_NAME, REGION
+      executeQuery<{ ID: string; NAME: string; REGION: string; HOSPITAL_TYPE: string; VALUE: number; LWBS: number }>(`
+        SELECT HOSPITAL_ID AS ID, HOSPITAL_NAME AS NAME, REGION, HOSPITAL_TYPE,
+               ROUND(AVG(AVG_WAIT_MINS), 1) AS VALUE,
+               ROUND(AVG(LWBS_RATE_PCT), 2) AS LWBS
+        FROM CURATED.HOSPITAL_PERFORMANCE
+        GROUP BY HOSPITAL_ID, HOSPITAL_NAME, REGION, HOSPITAL_TYPE
         ORDER BY VALUE DESC
-        LIMIT 20
       `),
     ]);
 
-    // Derive a status band from alert volume relative to the busiest entity.
-    const maxAlerts = Math.max(1, ...entityRows.map((r) => Number(r.ALERTS) || 0));
+    const k = kpiRows[0] || {};
 
     return NextResponse.json({
-      kpis: kpiRows[0] || {},
-      metricName: prettyMetricName(metric.perf),
+      kpis: k,
+      // Ordered to match the KPI cards rendered in page.tsx.
+      kpiCards: [
+        { title: 'Avg Wait Time', value: `${k.AVG_WAIT_MINS ?? '—'} min`, status: 'danger' },
+        { title: 'ED Avg Wait', value: `${k.AVG_ED_WAIT_MINS ?? '—'} min`, status: 'danger' },
+        { title: 'Avg Length of Stay', value: `${k.AVG_LOS_HOURS ?? '—'} hrs`, status: 'neutral' },
+        { title: 'Total Encounters', value: Number(k.TOTAL_ENCOUNTERS || 0).toLocaleString(), status: 'neutral' },
+        { title: 'LWBS Rate', value: `${k.AVG_LWBS_RATE ?? '—'}%`, status: 'warning' },
+        { title: 'High Acuity', value: `${k.AVG_ACUITY_HIGH ?? '—'}%`, status: 'neutral' },
+        { title: 'Hospitals Monitored', value: String(k.TOTAL_HOSPITALS ?? '—'), status: 'neutral' },
+      ],
       timeseries: trendRows.map((r) => ({ period: r.PERIOD, value: Number(r.VALUE) })),
       categories: regionRows.map((r) => ({ category: r.CATEGORY, count: Number(r.COUNT) })),
       detail: detailRows.map((r) => ({ x: r.X, y: Number(r.Y) })),
-      breakdown: categoryRows.map((r) => ({ label: r.LABEL, value: Number(r.VALUE) })),
+      breakdown: typeRows.map((r) => ({ label: r.LABEL, value: Number(r.VALUE) })),
       entities: entityRows.map((r) => {
-        const alerts = Number(r.ALERTS) || 0;
-        const ratio = alerts / maxAlerts;
+        const wait = Number(r.VALUE) || 0;
         return {
           id: r.ID,
           name: r.NAME,
           region: r.REGION,
-          status: ratio > 0.9 ? 'Critical' : ratio > 0.7 ? 'Watch' : 'Healthy',
-          value: Number(r.VALUE),
-          alerts,
+          type: r.HOSPITAL_TYPE,
+          // Thai public tertiary waits run far longer than private; band accordingly.
+          status: wait > 240 ? 'Critical' : wait > 120 ? 'Watch' : 'Healthy',
+          value: wait,
+          lwbs: Number(r.LWBS),
         };
       }),
       updatedAt: new Date().toISOString(),
